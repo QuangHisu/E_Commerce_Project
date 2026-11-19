@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace CampusMarket.ViewModels;
+namespace E_Commerce_Project.ViewModels;
 
 public sealed class LoginViewModel
 {
