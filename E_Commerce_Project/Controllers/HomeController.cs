@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-namespace CampusMarket.Controllers;
+namespace E_Commerce_Project.Controllers;
 
 public sealed class HomeController : Controller
 {
