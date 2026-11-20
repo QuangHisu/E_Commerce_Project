@@ -1,0 +1,42 @@
+@model IReadOnlyList<CartLine>
+@{
+    ViewData["Title"] = "Cart";
+}
+<h1>Your cart</h1>
+@if (Model.Count == 0)
+{
+    <p>Your cart is empty.</p><a asp-controller="Products" asp-action="Index" class="btn btn-primary">Browse products</a>
+}
+else
+{
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price (CAD)</th>
+                    <th>Quantity</th>
+                    <th>Total (CAD)</th>
+                </tr>
+            </thead>
+            <tbody>@foreach(var l in Model){
+                <tr>
+                    <td><img src="@l.Product.ImageUrl" alt="" width="48" /> @l.Product.Name</td>
+                    <td>@l.Product.Price.ToString("F2")</td>
+                    <td>
+                        <form asp-action="Update" method="post" class="d-flex gap-2"><input type="hidden" name="id"
+                                                                                                value="@l.Product.Id" /><input aria-label="Quantity for @l.Product.Name" type="number"
+                                                           name="quantity" value="@l.Quantity" min="0" max="99" class="form-control"
+                                                           style="max-width:90px" /><button class="btn btn-outline-primary">Update</button></form>
+                        </td>
+                        <td>@((l.Product.Price * l.Quantity).ToString("F2"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p>Set quantity to 0 to remove an item. Stock and prices are checked again at checkout.</p>
+    <p class="h4">Total CAD @Model.Sum(l => l.Product.Price * l.Quantity).ToString("F2")</p><a asp-controller="Checkout"
+                                                                                               asp-action="Index" class="btn btn-primary mt-3">Checkout</a>
+}

@@ -1,0 +1,12 @@
+@model IReadOnlyList<Order>
+@{
+    ViewData["Title"] = "All orders";
+}
+<h1>All orders</h1>@if(Model.Count==0){
+<p>No orders yet.</p>
+}
+@foreach (var o in Model)
+{
+    <p>Buyer ID: @o.BuyerId · Payment reference: @o.PaymentReference</p>
+    <partial name="_Order" model="o" />
+}

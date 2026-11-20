@@ -1,0 +1,34 @@
+@model IReadOnlyList<E_Commerce_Project.Controllers.AdminUser>
+@{
+    ViewData["Title"] = "Users";
+}
+<h1>User management</h1>
+<p>Review profiles and suspend or restore access. Password hashes and payment credentials are never displayed.</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name / ID</th>
+                <th>Email / contact</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>@foreach(var u in Model){
+            <tr>
+                <td>@u.FullName<br /><small>@u.Id</small></td>
+                <td>@u.Email<br />@u.Contact</td>
+                <td>@u.Role</td>
+                <td>@(u.Active ? "Active" : "Suspended")</td>
+                <td>@if(u.Role!="Admin"){
+                    <form asp-action="Status" method="post"><input type="hidden" name="id"
+                                                                       value="@u.Id" /><input type="hidden" name="active" value="@((!u.Active).ToString().ToLowerInvariant())" /><button
+                        class="btn btn-sm btn-outline-secondary">@(u.Active ? "Suspend" : "Restore")</button></form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

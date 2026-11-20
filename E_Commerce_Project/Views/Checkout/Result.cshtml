@@ -1,0 +1,20 @@
+@model Order
+@{
+    ViewData["Title"] = "Payment status";
+}
+<h1>Payment status</h1>
+<partial name="_Order" model="Model" />
+@if (Model.PaymentStatus == "Pending")
+{
+    <p>Stock is reserved until this checkout is paid or cancelled. Returning from
+        checkout does not itself confirm payment.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <form asp-action="Retry" method="post"><input type="hidden" name="id" value="@Model.Id" /><button
+                class="btn btn-primary">Resume payment</button></form>
+                <form asp-action="Refresh" method="post"><input type="hidden" name="id" value="@Model.Id" /><button
+                    class="btn btn-outline-primary">Refresh payment status</button></form>
+                    <form asp-action="Cancel" method="post"><input type="hidden" name="id" value="@Model.Id" /><button
+                        class="btn btn-outline-danger">Cancel checkout</button></form>
+                    </div>
+                }
+                <a asp-controller="Orders" asp-action="Index" class="btn btn-link mt-3">My orders</a>

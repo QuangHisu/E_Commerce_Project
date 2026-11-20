@@ -1,0 +1,20 @@
+@model Order
+@{
+    ViewData["Title"] = "Demo payment";
+}
+<h1>Simulated payment</h1>
+<div class="alert alert-warning">Local demonstration only. This records a simulated payment without calling Stripe or
+    charging a card.</div>
+    <p>Order @Model.Id</p>
+    <p>Total CAD @Model.Total.ToString("F2")</p>
+    @if (Model.PaymentStatus == "Pending")
+    {
+        <form asp-action="DemoPay" method="post"><input type="hidden" name="id" value="@Model.Id" /><button
+            class="btn btn-primary">Simulate successful payment</button></form>
+            <form asp-action="Cancel" method="post" class="mt-3"><input type="hidden" name="id" value="@Model.Id" /><button
+                class="btn btn-outline-danger">Cancel and release stock</button></form>
+            }else
+            {
+
+                <a asp-action="Result" asp-route-id="@Model.Id">View order status</a>
+            }

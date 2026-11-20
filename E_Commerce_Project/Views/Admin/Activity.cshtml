@@ -1,0 +1,27 @@
+@model IReadOnlyList<AuditEntry>
+@{
+    ViewData["Title"] = "Activity";
+}
+<h1>Recent activity</h1>
+<p>The most recent 500 events in this application run.</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>UTC time</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Record</th>
+            </tr>
+        </thead>
+        <tbody>@foreach(var a in Model){
+            <tr>
+                <td>@a.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td>@a.Actor</td>
+                <td>@a.Action</td>
+                <td>@a.Record</td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

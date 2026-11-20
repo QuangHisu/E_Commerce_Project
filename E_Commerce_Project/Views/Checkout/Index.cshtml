@@ -1,0 +1,26 @@
+@model IReadOnlyList<CartLine>
+@{
+    ViewData["Title"] = "Checkout";
+}
+<h1>Review your order</h1>
+<p>Campus pickup · CAD · No delivery or additional charges in this demo.</p>
+<p>Payment mode: <strong>@ViewBag.Mode</strong></p>
+@if (ViewBag.Mode == "Demo")
+{
+    <div class="alert alert-warning">This is a local payment simulation. No card will be charged.
+    </div>
+}
+else
+{
+
+    <div class="alert alert-info">You will continue to Stripe's hosted test checkout. Use test payment details
+        only.</div>
+    }
+    <ul>@foreach(var l in Model){
+        <li>@l.Product.Name × @l.Quantity — CAD @((l.Product.Price*l.Quantity).ToString("F2"))</li>
+    }
+</ul>
+<p class="h4">Total CAD @Model.Sum(l=>l.Product.Price*l.Quantity).ToString("F2")</p>
+<p>Check your <a asp-controller="Account" asp-action="Profile">pickup contact</a> before paying. A previous pending
+    checkout must be resolved first; continuing will resume it.</p>
+    <form asp-action="Start" method="post"><button class="btn btn-primary">Continue to payment</button></form>
