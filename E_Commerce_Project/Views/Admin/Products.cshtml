@@ -1,0 +1,35 @@
+@model IReadOnlyList<Product>
+@{
+    ViewData["Title"] = "Moderate listings";
+}
+<h1>All listings</h1>
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Seller</th>
+                <th>Price (CAD)</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Moderation</th>
+            </tr>
+        </thead>
+        <tbody>@foreach(var p in Model){
+            <tr>
+                <td><img src="@p.ImageUrl" alt="" width="48" /> @p.Name<br /><small>@p.Description</small></td>
+                <td>@p.SellerId</td>
+                <td>@p.Price.ToString("F2")</td>
+                <td>@p.Stock</td>
+                <td>@(p.Archived ? "Archived" : p.Visible ? "Visible" : "Hidden")</td>
+                <td>@if(!p.Archived){
+                    <form asp-action="Visibility" method="post"><input type="hidden" name="id"
+                                                                           value="@p.Id" /><input type="hidden" name="visible" value="@((!p.Visible).ToString().ToLowerInvariant())" /><button
+                        class="btn btn-sm btn-outline-secondary">@(p.Visible ? "Hide" : "Restore")</button></form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

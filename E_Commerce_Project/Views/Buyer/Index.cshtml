@@ -1,0 +1,7 @@
+@{
+    ViewData["Title"] = "Buyer dashboard";
+}
+<h1>Welcome, @User.Identity?.Name</h1>
+<p>Browse supplies, check out, and collect your items when the seller marks them ready.</p><a class="btn btn-primary"
+                                                                                              asp-controller="Products" asp-action="Index">Shop products</a> <a class="btn btn-outline-primary"
+                                                                  asp-controller="Orders" asp-action="Index">My orders</a>

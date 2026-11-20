@@ -1,8 +1,24 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="p-4 bg-light rounded mb-4">
+    <h1>Welcome to CampusMarket</h1>
+    <p class="lead">Campus supplies, simple checkout, and convenient pickup.</p><a class="btn btn-primary"
+                                                                                   asp-controller="Products" asp-action="Index">Browse products</a>
 </div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <h2>Buy</h2>
+        <p>Find supplies, build a cart, and follow your pickup order.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Sell</h2>
+        <p>Manage listings, product pictures, stock, and paid orders.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Manage</h2>
+        <p>Review accounts, moderate listings, and inspect orders and activity.</p>
+    </div>
+</div>
+<div class="alert alert-info mt-4">Demo data resets when the application restarts. Default checkout simulates payments;
+it does not charge a card. All prices are CAD.</div>
