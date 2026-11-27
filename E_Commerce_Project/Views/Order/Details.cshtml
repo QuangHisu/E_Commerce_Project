@@ -1,0 +1,9 @@
+@model Order
+@{
+   ViewData["Title"] = "Order details";
+}
+<h1>Order details</h1>
+<partial name="_Order" model="Model" />@if(Model.PaymentStatus=="Pending"){
+<a class="btn btn-primary" asp-controller="Checkout" asp-action="Result" asp-route-id="@Model.Id">Manage payment</a>
+}
+<a class="btn btn-link" asp-action="Index">Back to orders</a>

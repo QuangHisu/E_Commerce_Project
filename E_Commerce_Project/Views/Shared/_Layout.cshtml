@@ -1,50 +1,109 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var publicPage = User.Identity?.IsAuthenticated != true || (controller == "Account" && action is "Login" or "Register" or "ForgotPassword" or "ForgotPasswordConfirmation" or "ResetPassword");
+    var checkoutPage = controller == "Checkout";
+    var checkoutOrder = Model as E_Commerce_Project.Models.Order;
+}
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - E_Commerce_Project</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/E_Commerce_Project.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">E_Commerce_Project</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container"><a class="navbar-brand" asp-controller="Home"
+                                          asp-action="Index">E_Commerce_Project</a><button class="navbar-toggler" type="button"
+                                                                 data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false"
+                                                                 aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="nav">
+                    <ul class="navbar-nav me-auto">@if(checkoutPage) {
+                        @if (checkoutOrder?.PaymentStatus == "Pending")
+                        {
+                            <li>
+                                <form asp-controller="Checkout" asp-action="Cancel" method="post"
+                                      onsubmit="return confirm('Cancel this transaction?');"><input type="hidden" name="id"
+                                                                                                  value="@checkoutOrder.Id" /><button class="btn btn-outline-danger">Cancel
+                                    transaction</button></form>
+                                </li>
+                            }
+else if (checkoutOrder == null)
+                            {
+
+                                <li><a class="btn btn-outline-danger" asp-controller="Cart" asp-action="Index">Cancel
+                                    transaction</a></li>
+                                }
+                            }
+                            else if (publicPage)
+                            {
+                                <li><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                                <li><a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+                            }
+                            else
+                            {
+                                <li><a class="nav-link" asp-controller="Products" asp-action="Index">Products</a></li>
+                                @if (User.IsInRole("Buyer"))
+                                {
+                                    <li><a class="nav-link" asp-controller="Cart" asp-action="Index">Cart</a></li>
+                                    <li><a class="nav-link" asp-controller="Orders" asp-action="Index">My orders</a></li>
+                                }
+                                @if (User.IsInRole("Seller"))
+                                {
+                                    <li><a class="nav-link" asp-controller="Seller" asp-action="Index">My products</a></li>
+                                    <li><a class="nav-link" asp-controller="Seller" asp-action="Orders">Sales</a></li>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li><a class="nav-link" asp-controller="Admin" asp-action="Index">Users</a></li>
+                                    <li><a class="nav-link" asp-controller="Admin" asp-action="Products">Listings</a></li>
+                                    <li><a class="nav-link" asp-controller="Admin" asp-action="Orders">Orders</a></li>
+                                    <li><a class="nav-link" asp-controller="Admin" asp-action="Activity">Activity</a></li>
+                                }
+                            }
+                        </ul>
+                        <ul class="navbar-nav">@if(User.Identity?.IsAuthenticated==true && !publicPage){
+                            <li><a class="nav-link" asp-controller="Account" asp-action="Profile">@User.Identity.Name</a>
+                            </li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post"><button
+                                    class="btn btn-link nav-link">Log out</button></form>
+                                </li>
+                            }else
+                            {
+
+                                <li><a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+                                </li>
+                                <li><a class="nav-link" asp-controller="Account" asp-action="Login">Log in</a></li>
+                            }
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+            </nav>
+        </header>
+        <div class="container">
+            <main role="main" class="pb-4">@if(TempData["Message"] is string message){
+                <div class="alert alert-success" role="status">@message</div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger" role="alert">@error</div>
+            }
             @RenderBody()
         </main>
     </div>
-
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - E_Commerce_Project - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
+        <div class="container">&copy; 2026 CampusMarket · <a asp-controller="Home" asp-action="Privacy">Privacy</a> ·
+            Local learning project</div>
+        </footer>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
+
 </html>

@@ -1,0 +1,32 @@
+@model IReadOnlyList<Product>
+@{
+    ViewData["Title"] = "My products";
+}
+<h1>My products</h1><a class="btn btn-primary mb-3" asp-action="Edit">Create
+product</a>
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Picture</th>
+                <th>Product</th>
+                <th>Price (CAD)</th>
+                <th>Available stock</th>
+                <th>Visibility</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>@foreach(var p in Model){
+            <tr>
+                <td><img src="@p.ImageUrl" alt="@p.Name" width="64" height="64" /></td>
+                <td>@p.Name</td>
+                <td>@p.Price.ToString("F2")</td>
+                <td>@p.Stock</td>
+                <td>@(p.Visible ? "Visible" : "Hidden by admin")</td>
+                <td><a asp-action="Edit" asp-route-id="@p.Id">Edit</a> · <a asp-action="Delete"
+                                                                                asp-route-id="@p.Id">Delete</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

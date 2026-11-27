@@ -1,0 +1,26 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+}
+<div class="row g-4">
+    <div class="col-md-5"><img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded" /></div>
+    <div class="col-md-7">
+        <h1>@Model.Name</h1>
+        <p>@Model.Description</p>
+        <p>@Model.Category</p>
+        <p class="h4">CAD @Model.Price.ToString("F2")</p>
+        <p>@Model.Stock available</p>
+        @if (User.IsInRole("Buyer") && Model.Stock > 0)
+        {
+            <form asp-controller="Cart" asp-action="Add" method="post"><input type="hidden" name="id"
+                                                                                  value="@Model.Id" /><label for="quantity" class="form-label">Quantity</label><input id="quantity"
+                                                                                                    name="quantity" type="number" min="1" max="@Math.Min(99,Model.Stock)" value="1"
+                                                                                                    class="form-control mb-3" /><button class="btn btn-primary">Add to cart</button></form>
+            }else if (User.Identity?.IsAuthenticated != true)
+            {
+
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Log in to buy</a>
+            }
+            <a asp-action="Index" class="btn btn-link">Back to products</a>
+        </div>
+    </div>

@@ -1,0 +1,23 @@
+@model Order
+@{
+    ViewData["Title"] = "Secure payment";
+}
+<h1>Secure payment</h1>
+<p>Order @Model.Id · CAD @Model.Total.ToString("F2")</p>
+<p class="alert alert-info">Stripe test payment. Use test card details only.</p>
+<div id="payment-error" class="alert alert-danger" role="alert" hidden>Payment could not load. Check your connection and
+    reload, or cancel the transaction.</div>
+    <div id="checkout"></div>
+    <a asp-action="Result" asp-route-id="@Model.Id">Check payment status</a>
+    @section Scripts {
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+            (async () => {
+                try {
+                    const stripe = Stripe(@Html.Raw(System.Text.Json.JsonSerializer.Serialize((string)ViewBag.PublishableKey)));
+                    const checkout = await stripe.initEmbeddedCheckout({ clientSecret: @Html.Raw(System.Text.Json.JsonSerializer.Serialize((string)ViewBag.ClientSecret)) });
+                    checkout.mount('#checkout');
+                } catch { document.getElementById('payment-error').hidden = false; }
+            })();
+        </script>
+    }

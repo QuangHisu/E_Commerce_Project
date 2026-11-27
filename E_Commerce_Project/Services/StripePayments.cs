@@ -15,6 +15,7 @@ public sealed class StripePayments(HttpClient client, IConfiguration config, InM
         if (!secret.StartsWith("sk_test_"))
             throw new InvalidOperationException("Configure a Stripe test secret key using user secrets first.");
         using var req = new HttpRequestMessage(method, "https://api.stripe.com/v1/" + path);
+        req.Headers.Add("Stripe-Version", "2024-06-20");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secret);
         if (key != null)
             req.Headers.Add("Idempotency-Key", key);
@@ -26,15 +27,26 @@ public sealed class StripePayments(HttpClient client, IConfiguration config, InM
         using var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         return json.RootElement.Clone();
     }
+    public string PublishableKey => config["Stripe:PublishableKey"] ?? "";
+    public async Task<string> ClientSecret(Order order)
+    {
+        if (order.Provider != "Stripe" || order.SessionId == null || order.PaymentStatus != "Pending")
+            throw new InvalidOperationException("Order is not awaiting payment.");
+        var data = await Request(HttpMethod.Get, "checkout/sessions/" + Uri.EscapeDataString(order.SessionId));
+        if (data.GetProperty("client_reference_id").GetString() != order.Id || data.GetProperty("status").GetString() != "open")
+            throw new InvalidOperationException("Checkout is no longer open. Refresh payment status.");
+        return data.GetProperty("client_secret").GetString() ?? throw new InvalidOperationException("Missing checkout client secret.");
+    }
     public async Task<string> Create(Order order)
     {
         if (order.Provider != "Stripe" || order.PaymentStatus != "Pending")
             throw new InvalidOperationException("Order is not awaiting Stripe payment.");
         if (order.PaymentUrl != null)
             return order.PaymentUrl;
+        if (!PublishableKey.StartsWith("pk_test_")) throw new InvalidOperationException("Configure Stripe:PublishableKey with your test publishable key.");
         var origin = (config["Payments:BaseUrl"] ?? "http://localhost:5080").TrimEnd('/');
         var form = new Dictionary<string, string>{{"mode","payment"},{"payment_method_types[0]","card"},{"client_reference_id",order.Id},{"metadata[orderId]",order.Id},
-  {"success_url",origin+"/Checkout/Result/"+order.Id+"?session_id={CHECKOUT_SESSION_ID}"},{"cancel_url",origin+"/Checkout/Result/"+order.Id}};
+  {"ui_mode","embedded"},{"return_url",origin+"/Checkout/Result/"+order.Id+"?session_id={CHECKOUT_SESSION_ID}"}};
         for (int i = 0; i < order.Items.Count; i++)
         {
             var item = order.Items[i];
@@ -45,9 +57,7 @@ public sealed class StripePayments(HttpClient client, IConfiguration config, InM
             form[prefix + "[quantity]"] = item.Quantity.ToString();
         }
         var data = await Request(HttpMethod.Post, "checkout/sessions", form, "campus-" + order.Id);
-        var url = data.GetProperty("url").GetString() ?? throw new InvalidOperationException("Stripe did not return a checkout URL.");
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.Host != "checkout.stripe.com")
-            throw new InvalidOperationException("Unexpected checkout URL.");
+        var url = "/Checkout/Payment/" + order.Id;
         store.AttachSession(order.Id, data.GetProperty("id").GetString()!, url);
         return url;
     }

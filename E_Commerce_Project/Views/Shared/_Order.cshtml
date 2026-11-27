@@ -1,0 +1,32 @@
+@model Order
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Order @Model.Id</h2>
+        <p>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC · @Model.Provider payment ·
+            <strong>@Model.PaymentStatus</strong>
+        </p>
+        <p>Buyer: @Model.BuyerName · Pickup contact: @Model.Contact</p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price (CAD)</th>
+                        <th>Pickup status</th>
+                    </tr>
+                </thead>
+                <tbody>@foreach(var i in Model.Items){
+                    <tr>
+                        <td><img src="@i.ImageUrl" alt="" width="48" /> @i.Name</td>
+                        <td>@i.Quantity</td>
+                        <td>@i.Price.ToString("F2")</td>
+                        <td>@(Model.PaymentStatus == "Paid" ? i.Status : "Awaiting payment / cancelled")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p>Total CAD @Model.Total.ToString("F2")</p>
+</div>
+</div>

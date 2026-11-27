@@ -10,8 +10,46 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 namespace E_Commerce_Project.Controllers;
 
-public sealed class AccountController(IUserRepository users, IPasswordHasher<ApplicationUser> hasher, InMemoryStore store) : Controller
+public sealed class AccountController(IUserRepository users, IPasswordHasher<ApplicationUser> hasher, InMemoryStore store, E_Commerce_Project.Services.RecoveryEmail email, ILogger<AccountController> logger) : Controller
 {
+    [HttpGet]
+    public IActionResult ForgotPassword() => View(new ForgotPasswordForm());
+    [HttpPost, EnableRateLimiting("login")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordForm model)
+    {
+        if (!ModelState.IsValid) return View(model);
+        var user = await users.FindByEmailAsync(model.Email);
+        if (user is { Active: true })
+        {
+            var token = store.IssuePasswordReset(user.Id);
+            if (token != null)
+                try { await email.Send(user.Email, user.Id, token); }
+                catch (Exception e) when (e is HttpRequestException or TaskCanceledException or InvalidOperationException)
+                {
+                    store.RevokeReset(user.Id, token);
+                    logger.LogWarning("Password reset email could not be sent. Check email provider configuration and availability.");
+                }
+        }
+        return RedirectToAction(nameof(ForgotPasswordConfirmation));
+    }
+    [HttpGet] public IActionResult ForgotPasswordConfirmation() => View();
+    [HttpGet, ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public IActionResult ResetPassword(string? userId, string? token)
+    {
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token)) return View("ResetInvalid");
+        return View(new ResetPasswordForm { UserId = userId, Token = token });
+    }
+    [HttpPost, EnableRateLimiting("login"), ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> ResetPassword(ResetPasswordForm model)
+    {
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        if (!ModelState.IsValid) return View(model);
+        if (!store.ResetPassword(model.UserId, model.Token, model.Password, hasher)) return View("ResetInvalid");
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        TempData["Message"] = "Your password has been reset. Please log in with your new password.";
+        return RedirectToAction(nameof(Login));
+    }
     [HttpGet]
     public IActionResult Login(string? returnUrl = null) => View(new LoginViewModel { ReturnUrl = returnUrl });
     [HttpPost, EnableRateLimiting("login")]
@@ -27,7 +65,7 @@ public sealed class AccountController(IUserRepository users, IPasswordHasher<App
             ModelState.Remove(nameof(model.Password));
             return View(model);
         }
-        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, user.Id), new Claim(ClaimTypes.Name, user.FullName), new Claim(ClaimTypes.Role, user.Role) };
+        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, user.Id), new Claim(ClaimTypes.Name, user.FullName), new Claim(ClaimTypes.Role, user.Role), new Claim("security_stamp", user.SecurityStamp) };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
         if (Url.IsLocalUrl(model.ReturnUrl))
