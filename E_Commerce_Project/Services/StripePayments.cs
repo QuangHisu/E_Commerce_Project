@@ -6,7 +6,7 @@ using E_Commerce_Project.Data;
 using E_Commerce_Project.Models;
 namespace E_Commerce_Project.Services;
 
-public sealed class StripePayments(HttpClient client, IConfiguration config, InMemoryStore store)
+public sealed class StripePayments(HttpClient client, IConfiguration config, MongoStore store)
 {
     public string Mode => config["Payments:Mode"] == "Stripe" ? "Stripe" : "Demo";
     private async Task<JsonElement> Request(HttpMethod method, string path, Dictionary<string, string>? values = null, string? key = null)

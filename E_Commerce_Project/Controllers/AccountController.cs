@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 namespace E_Commerce_Project.Controllers;
 
-public sealed class AccountController(IUserRepository users, IPasswordHasher<ApplicationUser> hasher, InMemoryStore store, E_Commerce_Project.Services.RecoveryEmail email, ILogger<AccountController> logger) : Controller
+public sealed class AccountController(IUserRepository users, IPasswordHasher<ApplicationUser> hasher, MongoStore store, E_Commerce_Project.Services.RecoveryEmail email, ILogger<AccountController> logger) : Controller
 {
     [HttpGet]
     public IActionResult ForgotPassword() => View(new ForgotPasswordForm());

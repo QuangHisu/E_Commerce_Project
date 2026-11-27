@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace E_Commerce_Project.Controllers;
 
 [Authorize(Roles = Roles.Admin)]
-public sealed class AdminController(InMemoryStore store) : Controller
+public sealed class AdminController(MongoStore store) : Controller
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     public IActionResult Index() => View(store.Users().Select(u => new AdminUser(u.Id, u.FullName, u.Email, u.Role, u.Contact, u.Active)).ToArray());

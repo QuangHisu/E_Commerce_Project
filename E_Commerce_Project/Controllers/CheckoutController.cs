@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace E_Commerce_Project.Controllers;
 
 [Authorize(Roles = Roles.Buyer)]
-public sealed class CheckoutController(InMemoryStore store, StripePayments payments) : Controller
+public sealed class CheckoutController(MongoStore store, StripePayments payments) : Controller
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private Order? Own(string id)
