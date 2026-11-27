@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace E_Commerce_Project.Controllers;
 
 [Authorize(Roles = Roles.Seller)]
-public sealed class SellerController(InMemoryStore store, ImageStorage images) : Controller
+public sealed class SellerController(MongoStore store, ImageStorage images) : Controller
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     public async Task<IActionResult> Index() => View(await store.GetBySellerAsync(UserId));

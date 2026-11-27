@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace E_Commerce_Project.Controllers;
+
 [Authorize(Roles = Roles.Buyer)]
-public sealed class CartController(InMemoryStore store) : Controller
+public sealed class CartController(MongoStore store) : Controller
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     public IActionResult Index() => View(store.Cart(UserId));

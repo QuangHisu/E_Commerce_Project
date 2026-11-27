@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace E_Commerce_Project.Controllers;
 
 [AllowAnonymous]
-public sealed class StripeWebhookController(InMemoryStore store, StripePayments payments) : Controller
+public sealed class StripeWebhookController(MongoStore store, StripePayments payments) : Controller
 {
     [HttpPost("/payments/stripe/webhook"), IgnoreAntiforgeryToken, RequestSizeLimit(1048576)]
     public async Task<IActionResult> Receive()
