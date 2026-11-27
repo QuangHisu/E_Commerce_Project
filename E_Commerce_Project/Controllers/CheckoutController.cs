@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
 namespace E_Commerce_Project.Controllers;
+
 [Authorize(Roles = Roles.Buyer)]
 public sealed class CheckoutController(InMemoryStore store, StripePayments payments) : Controller
 {
@@ -48,6 +49,26 @@ public sealed class CheckoutController(InMemoryStore store, StripePayments payme
             return Redirect(await payments.Create(o));
         }
         catch (Exception e) when (e is InvalidOperationException or HttpRequestException or TaskCanceledException or JsonException) { TempData["Error"] = "Payment could not start. " + (e is InvalidOperationException ? e.Message : "Check your connection and retry."); return RedirectToAction(nameof(Result), new { id = o.Id }); }
+    }
+    [HttpGet, ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Payment(string id)
+    {
+        var order = Own(id);
+        if (order == null || order.Provider != "Stripe") return NotFound();
+        await Check(order);
+        order = Own(id)!;
+        if (order.PaymentStatus != "Pending") return RedirectToAction(nameof(Result), new { id });
+        try
+        {
+            ViewBag.ClientSecret = await payments.ClientSecret(order);
+            ViewBag.PublishableKey = payments.PublishableKey;
+            return View(order);
+        }
+        catch (Exception e) when (e is InvalidOperationException or HttpRequestException or TaskCanceledException or JsonException)
+        {
+            TempData["Error"] = "Payment is temporarily unavailable. Refresh the status or try again.";
+            return RedirectToAction(nameof(Result), new { id });
+        }
     }
     public IActionResult Demo(string id)
     {
