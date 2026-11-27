@@ -4,14 +4,49 @@ namespace E_Commerce_Project.Data;
 
 public sealed class InMemoryStore : IUserRepository, IProductRepository
 {
+    private readonly TimeProvider clock;
     private readonly List<ApplicationUser> users;
     private readonly List<Product> products;
     private readonly object gate = new();
     private readonly Dictionary<string, Dictionary<string, int>> carts = new();
     private readonly List<Order> orders = new();
     private readonly List<AuditEntry> audits = new();
-    public InMemoryStore(IPasswordHasher<ApplicationUser> hasher)
+    private readonly Dictionary<string, (string Hash, DateTimeOffset Expires)> resets = new();
+    public string? IssuePasswordReset(string userId)
     {
+        lock (gate)
+        {
+            if (!users.Any(u => u.Id == userId && u.Active)) return null;
+            var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+            resets[userId] = (ResetHash(token), clock.GetUtcNow().AddMinutes(20));
+            return token;
+        }
+    }
+    private static string ResetHash(string token) => Convert.ToHexString(
+        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+    public bool ResetPassword(string userId, string token, string password, IPasswordHasher<ApplicationUser> hasher)
+    {
+        lock (gate)
+        {
+            var user = users.FirstOrDefault(u => u.Id == userId && u.Active);
+            if (user == null || !resets.TryGetValue(userId, out var entry) || entry.Expires <= clock.GetUtcNow() ||
+                !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                    Convert.FromHexString(entry.Hash), Convert.FromHexString(ResetHash(token)))) return false;
+            user.PasswordHash = hasher.HashPassword(user, password);
+            user.SecurityStamp = Guid.NewGuid().ToString("N");
+            resets.Remove(userId);
+            Log(userId, "Reset password", userId);
+            return true;
+        }
+    }
+    public void RevokeReset(string userId, string token)
+    {
+        lock (gate)
+            if (resets.TryGetValue(userId, out var entry) && entry.Hash == ResetHash(token)) resets.Remove(userId);
+    }
+    public InMemoryStore(IPasswordHasher<ApplicationUser> hasher, TimeProvider? clock = null)
+    {
+        this.clock = clock ?? TimeProvider.System;
         users = new()
         {
             new() { Id = "buyer-1", FullName = "Alex Student", Email = "buyer@campus.example", Role = Roles.Buyer },

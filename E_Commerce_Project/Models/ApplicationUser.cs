@@ -8,5 +8,6 @@ public sealed class ApplicationUser
     public string Role { get; init; } = Roles.Buyer;
     public string Contact { get; set; } = "";
     public bool Active { get; set; } = true;
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
     public string PasswordHash { get; set; } = "";
 }
